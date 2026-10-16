@@ -71,11 +71,13 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetStatistics(assetLibraryId: ___){approvedCount, brokenLinksCount, expiredCount, expiringSoonCount, inDraftCount, pendingCount, reviewDateOverdueCount, scheduledCount, totalCount, upcomingReviewCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetStatistics(assetLibraryId: ___, expiringSoonDays: ___, upcomingReviewDays: ___){approvedCount, brokenLinksCount, expiredCount, expiringSoonCount, inDraftCount, pendingCount, reviewDateOverdueCount, scheduledCount, totalCount, upcomingReviewCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public AssetStatistics assetStatistics(
-			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId)
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("expiringSoonDays") Integer expiringSoonDays,
+			@GraphQLName("upcomingReviewDays") Integer upcomingReviewDays)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
@@ -83,7 +85,8 @@ public class Query {
 			this::_populateResourceContext,
 			assetStatisticsResource ->
 				assetStatisticsResource.getAssetStatistics(
-					Long.valueOf(assetLibraryId)));
+					Long.valueOf(assetLibraryId), expiringSoonDays,
+					upcomingReviewDays));
 	}
 
 	/**
@@ -333,4 +336,4 @@ public class Query {
 	private com.liferay.portal.kernel.model.User _user;
 
 }
-// LIFERAY-REST-BUILDER-HASH:-802839611
+// LIFERAY-REST-BUILDER-HASH:1219130683
