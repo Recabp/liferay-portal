@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.license.util.LicenseManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
@@ -47,7 +48,9 @@ public class AssetStatisticsResourceImpl
 	extends BaseAssetStatisticsResourceImpl {
 
 	@Override
-	public AssetStatistics getAssetStatistics(Long assetLibraryId)
+	public AssetStatistics getAssetStatistics(
+			Long assetLibraryId, Integer expiringSoonDays,
+			Integer upcomingReviewDays)
 		throws Exception {
 
 		LicenseManagerUtil.checkFreeTier();
@@ -80,6 +83,11 @@ public class AssetStatisticsResourceImpl
 
 		Date date = new Date();
 
+		Date expiringSoonThresholdDate = _getThresholdDate(
+			date, expiringSoonDays, _EXPIRING_SOON_DAYS);
+		Date upcomingReviewThresholdDate = _getThresholdDate(
+			date, upcomingReviewDays, _UPCOMING_REVIEW_DAYS);
+
 		return new AssetStatistics() {
 			{
 				setApprovedCount(
@@ -103,9 +111,7 @@ public class AssetStatisticsResourceImpl
 							WorkflowConstants.STATUS_APPROVED
 						).and(
 							ObjectEntryTable.INSTANCE.expirationDate.lte(
-								new Date(
-									date.getTime() +
-										(Time.DAY * _EXPIRING_SOON_DAYS)))
+								expiringSoonThresholdDate)
 						)));
 				setInDraftCount(
 					() -> _getCount(
@@ -143,9 +149,7 @@ public class AssetStatisticsResourceImpl
 							date
 						).and(
 							ObjectEntryTable.INSTANCE.reviewDate.lte(
-								new Date(
-									date.getTime() +
-										(Time.DAY * _UPCOMING_REVIEW_DAYS)))
+								upcomingReviewThresholdDate)
 						).and(
 							ObjectEntryTable.INSTANCE.status.in(
 								CMSWorkflowConstants.STATUSES)
@@ -207,6 +211,12 @@ public class AssetStatisticsResourceImpl
 
 			return 0;
 		}
+	}
+
+	private Date _getThresholdDate(Date date, Integer days, int defaultDays) {
+		return new Date(
+			date.getTime() +
+				(Time.DAY * GetterUtil.getInteger(days, defaultDays)));
 	}
 
 	private AssetStatistics _toAssetStatistics() {
