@@ -17,6 +17,7 @@ import com.liferay.object.model.ObjectEntryTable;
 import com.liferay.object.service.ObjectDefinitionService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.petra.sql.dsl.expression.Predicate;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.license.util.LicenseManagerUtil;
@@ -54,6 +55,9 @@ public class AssetStatisticsResourceImpl
 		throws Exception {
 
 		LicenseManagerUtil.checkFreeTier();
+
+		_validateDays(expiringSoonDays, "expiringSoonDays");
+		_validateDays(upcomingReviewDays, "upcomingReviewDays");
 
 		Long[] spaceGroupIds = CMSGroupUtil.getSpaceGroupIds(
 			contextCompany.getCompanyId(), _depotEntryService,
@@ -236,7 +240,22 @@ public class AssetStatisticsResourceImpl
 		};
 	}
 
+	private void _validateDays(Integer days, String parameterName) {
+		if ((days != null) &&
+			((days < _MINIMUM_DAYS) || (days > _MAXIMUM_DAYS))) {
+
+			throw new IllegalArgumentException(
+				StringBundler.concat(
+					parameterName, " must be between ", _MINIMUM_DAYS, " and ",
+					_MAXIMUM_DAYS));
+		}
+	}
+
 	private static final int _EXPIRING_SOON_DAYS = 7;
+
+	private static final int _MAXIMUM_DAYS = 365;
+
+	private static final int _MINIMUM_DAYS = 1;
 
 	private static final int _UPCOMING_REVIEW_DAYS = 7;
 
